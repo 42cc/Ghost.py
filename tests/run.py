@@ -27,14 +27,16 @@ class GhostTest(GhostTestCase):
         self.assertEqual(page.url, base_url)
         self.assertTrue("Test page" in self.ghost.content)
 
-    def test_page_with_no_cache_headers(self):
+    def test_open_page_with_no_cache_headers(self):
         page, resources = self.ghost.open("%sno-cache" % base_url)
         self.assertIsNotNone(page.content)
         self.assertIn("cache for me", page.content)
 
-    def test_http_status(self):
+    def test_open_403(self):
         page, resources = self.ghost.open("%sprotected" % base_url)
         self.assertEqual(resources[0].http_status, 403)
+
+    def test_open_404(self):
         page, resources = self.ghost.open("%s404" % base_url)
         self.assertEqual(page.http_status, 404)
 
@@ -65,6 +67,14 @@ class GhostTest(GhostTestCase):
             .wait_for_selector("#list li:nth-child(2)")
         self.assertEqual(resources[0].url, "%sitems.json" % base_url)
 
+    def test_settimeout(self):
+        page, resources = self.ghost.open("%ssettimeout" % base_url)
+        result, _ = self.ghost.evaluate("document.getElementById('result').innerHTML")
+        self.assertEqual(result, 'Bad')
+        self.ghost.sleep(4)
+        result, _ = self.ghost.evaluate("document.getElementById('result').innerHTML")
+        self.assertEqual(result, 'Good')
+
     def test_wait_for_text(self):
         page, resources = self.ghost.open("%smootools" % base_url)
         self.ghost.click("#button")
@@ -86,7 +96,7 @@ class GhostTest(GhostTestCase):
             "radio": "first choice"
         }
         self.ghost.fill('#contact-form', values)
-        for field in ['text', 'email', 'textarea', 'selectbox']:
+        for field in ['text', 'email', 'textarea']:
             value, resssources = self.ghost\
                 .evaluate('document.getElementById("%s").value' % field)
             self.assertEqual(value, values[field])
@@ -94,14 +104,14 @@ class GhostTest(GhostTestCase):
             'document.getElementById("checkbox").checked')
         self.assertEqual(value, True)
         value, resources = self.ghost.evaluate(
+            "document.querySelector('option[value=two]').selected;")
+        self.assertTrue(value)
+        value, resources = self.ghost.evaluate(
             'document.getElementById("radio-first").checked')
         self.assertEqual(value, True)
         value, resources = self.ghost.evaluate(
             'document.getElementById("radio-second").checked')
         self.assertEqual(value, False)
-
-    def test_fill_checkbox(self):
-        self.ghost.open("%sform" % base_url)
 
     def test_form_submission(self):
         self.ghost.open("%sform" % base_url)
@@ -143,7 +153,7 @@ class GhostTest(GhostTestCase):
         self.ghost.load_cookies('testcookie.txt')
         self.ghost.open("%sget/cookie" % base_url)
         self.assertTrue( 'OK' in self.ghost.content )
-        
+
     def test_wait_for_alert(self):
         self.ghost.open("%salert" % base_url)
         self.ghost.click('#alert-button')
@@ -285,7 +295,17 @@ class GhostTest(GhostTestCase):
             .evaluate('document.getElementById("textarea").value')
         self.assertEqual(value, expected)
 
-    def test_set_simple_file_field(self):
+    def test_set_field_value_select(self):
+        self.ghost.open("%sform" % base_url)
+        self.ghost.set_field_value('[name=selectbox]', 'two')
+        value, resources = self.ghost.evaluate(
+            "document.querySelector('option[value=two]').selected;")
+        self.assertTrue(value)
+        value, resources = self.ghost.evaluate(
+            "document.querySelector('option[value=one]').selected;")
+        self.assertFalse(value)
+
+    def test_set_field_value_simple_file_field(self):
         self.ghost.open("%supload" % base_url)
         self.ghost.set_field_value('[name=simple-file]',
             os.path.join(os.path.dirname(__file__), 'static', 'blackhat.jpg'))
@@ -308,8 +328,8 @@ class GhostTest(GhostTestCase):
 
     def test_unsupported_content(self):
         page, resources = self.ghost.open("%ssend-file" % base_url)
-        foo = open(os.path.join(os.path.dirname(__file__), 'static',
-        'foo.tar.gz'), 'r').read(1024)
+        foo = open(os.path.join(os.path.dirname(__file__),
+                                'static', 'foo.tar.gz'), 'r').read(1024)
         self.assertEqual(resources[0].content, foo)
 
     def test_url_with_hash(self):

@@ -89,6 +89,11 @@ def mootools():
     return render_template('mootools.html')
 
 
+@app.route('/settimeout')
+def settimeout():
+    return render_template('settimeout.html')
+
+
 @app.route('/items.json')
 def items():
     return jsonify(items=['second item', 'third item'])
@@ -115,7 +120,7 @@ def send_file():
     h.add('Content-type', 'application/octet-stream', charset='utf8')
     h.add('Content-disposition', 'attachment', filename='name.tar.gz')
     return Response(open(os.path.join(os.path.dirname(__file__), 'static',
-        'foo.tar.gz'), 'r'), headers=h)
+                                      'foo.tar.gz'), 'r'), headers=h)
 
 @app.route('/url-hash')
 def url_hash():

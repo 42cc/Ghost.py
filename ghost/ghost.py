@@ -218,14 +218,17 @@ class Ghost(object):
     _upload_file = None
     _app = None
 
-    def __init__(self, user_agent=default_user_agent, wait_timeout=8,
+    def __init__(
+            self, user_agent=default_user_agent, wait_timeout=8,
             wait_callback=None, log_level=logging.WARNING, display=False,
             viewport_size=(800, 600), ignore_ssl_errors=True,
             cache_dir=os.path.join(tempfile.gettempdir(), "ghost.py"),
             plugins_enabled=False, java_enabled=False,
             plugin_path=['/usr/lib/mozilla/plugins', ],
             download_images=True, qt_debug=False,
-            show_scroolbars=True):
+            show_scroolbars=True,
+            xvfb_extra_args=None):
+        xvfb_extra_args = [] or xvfb_extra_args
         self.http_resources = []
 
         self.user_agent = user_agent
@@ -238,7 +241,9 @@ class Ghost(object):
                 and not hasattr(Ghost, 'xvfb'):
             try:
                 os.environ['DISPLAY'] = ':99'
-                Ghost.xvfb = subprocess.Popen(['Xvfb', ':99'])
+                xvfb_args = ['Xvfb', ':99']
+                xvfb_args.extend(xvfb_extra_args)
+                Ghost.xvfb = subprocess.Popen(xvfb_args)
                 time.sleep(0.5)
             except OSError:
                 raise Error('Xvfb is required to a ghost run outside ' +

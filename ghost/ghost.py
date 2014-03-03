@@ -249,8 +249,8 @@ class Ghost(object):
                 time.sleep(0.5)
             except OSError as e:
                 raise Error('Xvfb is required to a ghost run outside ' +
-                            'an X instance. Error: %s. Args: %s' %
-                            (unicode(e), xvfb_args))
+                            'an X instance. Error: %s. Args: %s. Path: %s' %
+                            (unicode(e), xvfb_args, env['PATH']))
 
         self.display = display
 

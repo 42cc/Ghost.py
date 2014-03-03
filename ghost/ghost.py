@@ -240,10 +240,12 @@ class Ghost(object):
         if not sys.platform.startswith('win') and not 'DISPLAY' in os.environ\
                 and not hasattr(Ghost, 'xvfb'):
             try:
-                os.environ['DISPLAY'] = ':99'
+                env = os.environ.copy()
+                env['DISPLAY'] = ':99'
+                env['PATH'] = '%s:%s' % ('/bin:/usr/bin', env.get('PATH'))
                 xvfb_args = ['Xvfb', ':99']
                 xvfb_args.extend(xvfb_extra_args)
-                Ghost.xvfb = subprocess.Popen(xvfb_args)
+                Ghost.xvfb = subprocess.Popen(xvfb_args, env=env)
                 time.sleep(0.5)
             except OSError as e:
                 raise Error('Xvfb is required to a ghost run outside ' +

@@ -228,7 +228,7 @@ class Ghost(object):
             download_images=True, qt_debug=False,
             show_scroolbars=True,
             xvfb_extra_args=None):
-        xvfb_extra_args = [] or xvfb_extra_args
+        xvfb_extra_args = xvfb_extra_args or []
         self.http_resources = []
 
         self.user_agent = user_agent

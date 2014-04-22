@@ -241,6 +241,7 @@ class Ghost(object):
                 and not hasattr(Ghost, 'xvfb'):
             try:
                 os.environ['DISPLAY'] = ':99'
+                os.environ['PATH'] = '%s:%s' % ('/bin:/usr/bin', os.environ.get('PATH'))
                 xvfb_args = ['Xvfb', ':99']
                 xvfb_args.extend(xvfb_extra_args)
                 Ghost.xvfb = subprocess.Popen(xvfb_args)
@@ -248,7 +249,7 @@ class Ghost(object):
             except OSError as e:
                 raise Error('Xvfb is required to a ghost run outside ' +
                             'an X instance. Error: %s. Args: %s. Path: %s' %
-                            (unicode(e), xvfb_args))
+                            (unicode(e), xvfb_args, os.environ['PATH']))
 
         self.display = display
 

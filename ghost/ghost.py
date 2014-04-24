@@ -211,6 +211,8 @@ class Ghost(object):
     :param plugin_path: Array with paths to plugin directories
         (default ['/usr/lib/mozilla/plugins'])
     :param download_images: Indicate if the browser should download images
+    :param xvfb_extra_args: Extra xvfb args will be passed to Ghost
+    :param resizable_viewport_size: Override viewport_size if page size greater
     """
     _alert = None
     _confirm_expected = None
@@ -227,9 +229,12 @@ class Ghost(object):
             plugin_path=['/usr/lib/mozilla/plugins', ],
             download_images=True, qt_debug=False,
             show_scroolbars=True,
-            xvfb_extra_args=None):
+            xvfb_extra_args=None,
+            resizable_viewport_size=False):
         xvfb_extra_args = xvfb_extra_args or []
         self.http_resources = []
+        self.viewport_size = viewport_size
+        self.resizable_viewport_size = resizable_viewport_size
 
         self.user_agent = user_agent
         self.wait_timeout = wait_timeout
@@ -281,7 +286,7 @@ class Ghost(object):
             self.page.mainFrame().setScrollBarPolicy(QtCore.Qt.Horizontal,
                 QtCore.Qt.ScrollBarAlwaysOff)
 
-        self.set_viewport_size(*viewport_size)
+        self.set_viewport_size(*self.viewport_size)
 
         # Page signals
         self.page.loadFinished.connect(self._page_loaded)
@@ -313,7 +318,7 @@ class Ghost(object):
         if self.display:
             class MyQWebView(QtWebKit.QWebView):
                 def sizeHint(self):
-                    return QSize(*viewport_size)
+                    return QSize(*self.viewport_size)
             self.webview = MyQWebView()
             if plugins_enabled:
                 self.webview.settings().setAttribute(
@@ -343,6 +348,11 @@ class Ghost(object):
         if region:
             x1, y1, x2, y2 = region
             w, h = (x2 - x1), (y2 - y1)
+            if (
+                (w > self.viewport_size[0] or h > self.viewport_size[1])
+                and self.resizable_viewport_size
+            ):
+                self.set_viewport_size(w, h)  # resize viewport_size if site is greater
             image = QImage(QSize(x2, y2), format)
             painter = QPainter(image)
             self.main_frame.render(painter)
